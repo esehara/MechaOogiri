@@ -53,8 +53,12 @@ def s(words, pre, after, p_or_a, simple, bokelast, negative=[], recur=True):
 class WordManager(object):
 
     def __init__(self, words):
+        words = list(words)
+        print(words)
         self.set_noum(words)
         self.set_v(words)
+        self.set_adv(words)
+        self.set_interj(words)
         self.joshi = [u"の", u"は", u"が", u"を"]
         random.shuffle(self.joshi)
 
@@ -66,6 +70,14 @@ class WordManager(object):
         self.v = list(filter(lambda x: x[1] == u"動詞", words))
         random.shuffle(self.v)
 
+    def set_adv(self, words):
+        self.adv = list(filter(lambda x: x[1] == u"副詞", words))
+        random.shuffle(self.adv)
+
+    def set_interj(self, words):
+        self.adv = list(filter(lambda x: x[1] == u"副詞", words))
+        random.shuffle(self.adv)
+
     @classmethod
     def parse(self, words, negative=[]):
         most_similar = [w for w in model.most_similar(
@@ -73,6 +85,36 @@ class WordManager(object):
         return filter(
             lambda x: x,
             [word_kind(m) for m, _ in most_similar])
+
+    def choice_interj(self, tried_time=0):
+        try:
+            interj = self.adv.pop()[0]
+            while (interj in choiced_word):
+                interj = self.adv.pop()[0]
+            choiced_word.append(interj)
+            return interj
+        except IndexError:
+            random.shuffle(choiced_word)
+            self.set_interj(self.parse([choiced_word[0]]))
+            if tried_time < 10:
+                return self.choice_interj(tried_time + 1)
+            else:
+                return ""
+
+    def choice_adv(self, tried_time=0):
+        try:
+            adv = self.adv.pop()[0]
+            while (adv in choiced_word):
+                adv = self.adv.pop()[0]
+            choiced_word.append(adv)
+            return adv
+        except IndexError:
+            random.shuffle(choiced_word)
+            self.set_adv(self.parse([choiced_word[0]]))
+            if tried_time < 10:
+                return self.choice_adv(tried_time + 1)
+            else:
+                return ""
 
     def choice_noum(self):
         try:
@@ -107,6 +149,17 @@ class WordManager(object):
 
 
 class BokePattern:
+
+    @classmethod
+    def prefix_pattern(cls):
+        s = [
+            [],
+            [u"感動詞"],
+            [u"感動詞", u"副詞"],
+            [u"副詞"]
+        ]
+        random.shuffle(s)
+        return s.pop()
 
     @classmethod
     def subject_pattern(cls):
@@ -152,7 +205,12 @@ class BokePattern:
         else:
             random.shuffle(s)
             choiced = s.pop()
-        return s.pop()
+
+        prefix_flag = random.randint(0, 1)
+        if prefix_flag:
+            choiced = cls.prefix_pattern() + choiced
+
+        return choiced
 
     @classmethod
     def choice(cls, simple=False):
@@ -170,6 +228,12 @@ def boke(words, pre, after, p_or_a, simple, bokelast):
             boke_str += w.choice_joshi()
         elif word_kind == u"動詞":
             boke_str += w.choice_v()
+        elif word_kind == u"副詞":
+            boke_str += w.choice_adv()
+        elif word_kind == u"感動詞":
+            pre_boke = w.choice_interj()
+            if pre_boke != "":
+                boke_str += pre_boke + "、"
         else:
             boke_str += word_kind
 
