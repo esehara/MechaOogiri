@@ -1,5 +1,4 @@
 require 'natto'
-nm = Natto::MeCab.new
 FILENAME = "bokete.txt"
 LIMIT = 1000000
 
@@ -23,7 +22,8 @@ def from_txt file
 end
 
 def wakati_line l
-  nm_result = nm.parse(text)
+  nm = Natto::MeCab.new
+  nm_result = nm.parse(l)
   puts nm_result.split("\n")
         .map {|line| line.split("\t")}
         .select {|line| line.size > 1}
