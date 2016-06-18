@@ -197,12 +197,24 @@ class BokePattern:
         return s.pop()
 
     @classmethod
+    def gobi_pattern(cls):
+        s = [
+            [u"だよ"],
+            [u"です"],
+            [u"なの"],
+            [u"では"],
+        ]
+        random.shuffle(s)
+        return s.pop()
+
+    @classmethod
     def simple_or_complex(cls, simple):
         s = [(
             cls.subject_pattern() +
             cls.connect_rep() +
             cls.subord_pattern()),
             cls.subject_pattern()]
+
         if simple:
             choiced = s[1]
         else:
@@ -212,6 +224,10 @@ class BokePattern:
         prefix_flag = random.randint(0, 1)
         if prefix_flag:
             choiced = cls.prefix_pattern() + choiced
+
+        gobi_flag = random.randint(0, 1)
+        if gobi_flag:
+            choiced += cls.gobi_pattern()
 
         return choiced
 
