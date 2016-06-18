@@ -54,7 +54,6 @@ class WordManager(object):
 
     def __init__(self, words):
         words = list(words)
-        print(words)
         self.set_noum(words)
         self.set_v(words)
         self.set_adv(words)
