@@ -23,7 +23,8 @@ def word_choice(words):
     return words[0::(random.randint(1, 2))]
 
 
-def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[]):
+def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[], return_boke=False):
+    bokes = []
     for x in range(LIMIT):
         text = "".join(
             filter(lambda x: x != u"、" and x != u"。", [c for c in text]))
@@ -32,16 +33,19 @@ def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[])
                      filter(lambda x: x,
                             [word_and_kind_parse(l) for l in result]))
         result = word_choice(list(result))
-        s(result, pre, after, p_or_a, simple, bokelast)
-
+        boke_text = s(result, pre, after, p_or_a, simple, bokelast)
+        bokes.append(boke_text)
+    if return_boke:
+        return [b for b in bokes if b]
 
 def s(words, pre, after, p_or_a, simple, bokelast, negative=[], recur=True):
     try:
         word_and_kind = WordManager.parse(words, negative)
-        boke(word_and_kind, pre, after, p_or_a, simple, bokelast)
+        boke_text = boke(word_and_kind, pre, after, p_or_a, simple, bokelast)
         if recur:
             for word in [w for w, _ in word_and_kind]:
-                s([w], pre, after, simple, p_or_a, bokelast, [], False)
+                return s([w], pre, after, simple, p_or_a, bokelast, [], False)
+        return boke_text
     except KeyError:
         pass
 
@@ -82,7 +86,7 @@ class WordManager(object):
             self.set_noum(self.parse([choiced_word[0]]))
             return self.choice_noum()
 
-    def choice_v(self):
+    def choice_v(self, tried_time=0):
         try:
             v = self.v.pop()[0]
             while (v in choiced_word):
@@ -93,7 +97,10 @@ class WordManager(object):
             seed = choiced_word + self.noum
             random.shuffle(seed)
             self.set_v(self.parse([seed[0][0]]))
-            return self.choice_v()
+            if tried_time < 10:
+                return self.choice_v(tried_time + 1)
+            else:
+                return ""
 
     def choice_joshi(self):
         return self.joshi.pop()
@@ -178,6 +185,7 @@ def boke(words, pre, after, p_or_a, simple, bokelast):
             boke_str = p_or_a + boke_str
 
     print(boke_str)
+    return boke_str
 
 
 def word_kind(m):
