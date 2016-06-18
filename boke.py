@@ -74,7 +74,7 @@ class WordManager(object):
         random.shuffle(self.adv)
 
     def set_interj(self, words):
-        self.adv = list(filter(lambda x: x[1] == u"副詞", words))
+        self.interj = list(filter(lambda x: x[1] == u"感動詞", words))
         random.shuffle(self.adv)
 
     @classmethod
