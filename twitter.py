@@ -15,6 +15,16 @@ def make_api():
     return tweepy.API(auth)
 
 
+def no_answer():
+    l = [
+        "俺に何を求めている",
+        "ちょっと意味わからない",
+        "ん、もう一度言ってみて"
+    ]
+    random.shuffle(l)
+    return l.pop()
+
+
 def main():
     r = redis.Redis()
     api = make_api()
@@ -34,7 +44,7 @@ def main():
             random.shuffle(answers)
             selected_answer = answers.pop()
         else:
-            selected_answer = "ごめん、それは意味がわからない"
+            selected_answer = no_answer()
 
         selected_answer = (
             "【答え】" + selected_answer + "\n\n" +
