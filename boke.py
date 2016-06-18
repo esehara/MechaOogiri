@@ -94,6 +94,8 @@ class WordManager(object):
             return interj
         except IndexError:
             random.shuffle(choiced_word)
+            if not len(choiced_word):
+                return ""
             self.set_interj(self.parse([choiced_word[0]]))
             if tried_time < 10:
                 return self.choice_interj(tried_time + 1)
