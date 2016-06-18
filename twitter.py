@@ -48,7 +48,7 @@ def main():
 
         selected_answer = (
             "【答え】" + selected_answer + "\n\n" +
-            "【問題】" + mention_text + "by @" + mention_user )
+            "【問題】" + mention_text + " by @" + mention_user )
 
         if not r.get('already_reply_' + str(mention_id)):
             api.update_status(selected_answer, mention_id)
