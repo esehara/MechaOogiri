@@ -111,6 +111,8 @@ class WordManager(object):
             return adv
         except IndexError:
             random.shuffle(choiced_word)
+            if not len(choiced_word):
+                return ""
             self.set_adv(self.parse([choiced_word[0]]))
             if tried_time < 10:
                 return self.choice_adv(tried_time + 1)
