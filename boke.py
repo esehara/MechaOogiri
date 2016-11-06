@@ -129,11 +129,15 @@ def markov(wordlist):
 
 def question_wikipedia(text):
     bokes = []
-    word = random.choice(list(word_from_title_for_wikipedia(text)))
+    title_words = list(filter(lambda x: len(x) > 1, word_from_title_for_wikipedia(text)))
     sequenses = []
-    similar_words = wikipedia_link(word)
+    text_from_wikipedia = ""
     for i in range(5):
-        text_from_wikipedia = wikipedia_text(random.choice(similar_words))
+        word = random.choice(title_words)
+        similar_words = wikipedia_link(word)
+        text_from_wikipedia += wikipedia_text(random.choice(similar_words))
+
+    for i in range(5):
         for w in markov(wakati_from_wikipedia(text_from_wikipedia)):
             print(w)
     return sequenses
