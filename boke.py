@@ -109,7 +109,7 @@ def markov(wordlist):
         if list(markov_dict.keys()) == []:
             break
         w1, w2 = random.choice(list(markov_dict.keys()))
-        while count < 25:
+        while count < 10:
             try:
                 tmp = random.choice(markov_dict[(w1, w2)])
                 if sentence == "" and word_and_kind_parse_for_wikipedia(
