@@ -25,7 +25,10 @@ def word_and_kind_parse_for_wikipedia(line):
     line_word = line.split("\t")
     if len(line_word) < 2:
         return None
-    w, _, _, k, _, _ = line_word
+    try:
+        w, _, _, k, _, _ = line_word
+    except ValueError:
+        return None
     k = k.split(u"-")[0]
     if k != u"名詞":
         return None
