@@ -64,7 +64,10 @@ def wikipedia_link(word):
     soup = BeautifulSoup(r.text, "html.parser")
     words = list(
         filter(lambda x:
-               (not "ja" in x),
+               (not "ja"  in x) and
+               (not "php" in x) and
+               (not "#"   in x) and
+               (not ":"   in x),
                map(lambda x: x.split("/")[-1],
                    map(lambda x: unquote(x.get("href")),
                        filter(lambda x: x.get("href"), soup.find_all("a"))))))
