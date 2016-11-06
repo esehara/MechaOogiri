@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from gensim.models import word2vec
 import MeCab
 import random
@@ -23,16 +22,22 @@ def word_choice(words):
     return words[0::(random.randint(1, 2))]
 
 
+def text_normalization(text):
+    return "".join(filter(
+        lambda x: x != u"、" and x != u"。", [c for c in text]))
+
+
+def word_from_title(text):
+    result = tagger.parse(text_normalization(text)).split('\n')
+    return map(lambda x: x[0],
+               filter(lambda x: x,
+                      [word_and_kind_parse(l) for l in result]))
+
+
 def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[], return_boke=False):
     bokes = []
     for x in range(LIMIT):
-        text = "".join(
-            filter(lambda x: x != u"、" and x != u"。", [c for c in text]))
-        result = tagger.parse(text).split('\n')
-        result = map(lambda x: x[0],
-                     filter(lambda x: x,
-                            [word_and_kind_parse(l) for l in result]))
-        result = word_choice(list(result))
+        result = word_choice(list(word_from_title(text)))
         boke_text = s(result, pre, after, p_or_a, simple, bokelast)
         bokes.append(boke_text)
     if return_boke:
@@ -225,8 +230,8 @@ class BokePattern:
         if prefix_flag:
             choiced = cls.prefix_pattern() + choiced
 
-        gobi_flag = random.randint(0, 1)
-        if gobi_flag:
+        gobi_per = random.randint(0, 100)
+        if gobi_per > 90:
             choiced += cls.gobi_pattern()
 
         return choiced
@@ -263,7 +268,7 @@ def boke(words, pre, after, p_or_a, simple, bokelast):
     if p_or_a:
         p_a_flag = random.randint(0, 1)
         if p_a_flag:
-            boke_str += p_or_a
+           boke_str += p_or_a
         else:
             boke_str = p_or_a + boke_str
 
