@@ -89,7 +89,7 @@ def gen_markov_dict(wordlist):
         if w1 and w2:
             if (w1, w2) not in markov:
                 markov[(w1, w2)] = []
-                markov[(w1, w2)].append(word)
+            markov[(w1, w2)].append(word)
         w1, w2 = w2, word
     return markov
 
