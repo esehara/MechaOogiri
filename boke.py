@@ -1,6 +1,10 @@
 from gensim.models import word2vec
 import MeCab
 import random
+import requests
+from urllib.parse import quote, unquote
+from bs4 import BeautifulSoup
+
 model = word2vec.Word2Vec.load("./resource/oogiri_gensim.model")
 tagger = MeCab.Tagger("-Ochasen")
 LIMIT = 30
@@ -34,6 +38,81 @@ def word_from_title(text):
                       [word_and_kind_parse(l) for l in result]))
 
 
+def wikipedia_link(word):
+    r = requests.get('https://ja.wikipedia.org/wiki/' + quote(word))
+    soup = BeautifulSoup(r.text, "html.parser")
+    return list(
+        filter(lambda x:
+               not "#" in x and
+               not ":" in x and
+               not "." in x and
+               not "_" in x and
+               x != "ja" and
+               x != "" and
+               x != word and
+               x != "利用規約" ,
+            map(lambda x: x.split("/")[-1],
+                map(lambda x: unquote(x.get("href")),
+                    filter(lambda x: x.get("href"), soup.find_all("a"))))))
+
+
+def wikipedia_text(word):
+    r = requests.get('https://ja.wikipedia.org/wiki/' + quote(word))
+    soup = BeautifulSoup(r.text, "html.parser")
+    return "".join(list(filter(lambda x: x != "", map(lambda x: x.text, soup.find_all("p")))))
+
+
+def wakati_from_wikipedia(text):
+    mecab  = MeCab.Tagger("-Owakati")
+    wakati = mecab.parse(text)
+    return wakati.rstrip(" \n").split(" ")
+
+
+def gen_markov_dict(wordlist):
+    markov = {}
+    w1 = ""
+    w2 = ""
+    for word in wordlist:
+        if w1 and w2:
+            if (w1, w2) not in markov:
+                markov[(w1, w2)] = []
+                markov[(w1, w2)].append(word)
+        w1, w2 = w2, word
+    return markov
+
+
+def markov(wordlist):
+    markov_dict = gen_markov_dict(wordlist)
+    sentences = []
+    for i in range(5):
+        count = 0
+        sentence = ""
+        w1, w2 = random.choice(list(markov_dict.keys()))
+        while count < 25:
+            try:
+                tmp = random.choice(markov_dict[(w1, w2)])
+                sentence += tmp
+                if tmp == "。":
+                    break
+                w1, w2 = w2, tmp
+                count += 1
+            except KeyError:
+                break
+        sentences.append(sentence)
+    return sentences
+
+
+def question_wikipedia(text):
+    bokes = []
+    word = random.choice(list(word_from_title(text)))
+    sequenses = []
+    similar_words = wikipedia_link(word)
+    for i in range(5):
+        text_from_wikipedia = wikipedia_text(random.choice(similar_words))
+        print(markov(wakati_from_wikipedia(text_from_wikipedia)))
+    return sequenses
+
+
 def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[], return_boke=False):
     bokes = []
     for x in range(LIMIT):
@@ -42,6 +121,7 @@ def question(text, pre=None, after=None, p_or_a=None, simple=False, bokelast=[],
         bokes.append(boke_text)
     if return_boke:
         return [b for b in bokes if b]
+
 
 def s(words, pre, after, p_or_a, simple, bokelast, negative=[], recur=True):
     try:
