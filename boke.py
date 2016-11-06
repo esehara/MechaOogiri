@@ -21,6 +21,17 @@ def word_and_kind_parse(line):
     return w, k
 
 
+def word_and_kind_parse_for_wikipedia(line):
+    line_word = line.split("\t")
+    if len(line_word) < 2:
+        return None
+    w, _, _, k, _, _ = line_word
+    k = k.split(u"-")[0]
+    if k != u"名詞":
+        return None
+    return w, k
+
+
 def word_choice(words):
     random.shuffle(words)
     return words[0::(random.randint(1, 2))]
@@ -38,28 +49,30 @@ def word_from_title(text):
                       [word_and_kind_parse(l) for l in result]))
 
 
+def word_from_title_for_wikipedia(text):
+    result = tagger.parse(text_normalization(text)).split('\n')
+    return map(lambda x: x[0],
+               filter(lambda x: x,
+                      [word_and_kind_parse_for_wikipedia(l) for l in result]))
+
+
 def wikipedia_link(word):
     r = requests.get('https://ja.wikipedia.org/wiki/' + quote(word))
     soup = BeautifulSoup(r.text, "html.parser")
-    return list(
+    words = list(
         filter(lambda x:
-               not "#" in x and
-               not ":" in x and
-               not "." in x and
-               not "_" in x and
-               x != "ja" and
-               x != "" and
-               x != word and
-               x != "利用規約" ,
-            map(lambda x: x.split("/")[-1],
-                map(lambda x: unquote(x.get("href")),
-                    filter(lambda x: x.get("href"), soup.find_all("a"))))))
+               (not "ja" in x),
+               map(lambda x: x.split("/")[-1],
+                   map(lambda x: unquote(x.get("href")),
+                       filter(lambda x: x.get("href"), soup.find_all("a"))))))
+    return words
 
 
 def wikipedia_text(word):
     r = requests.get('https://ja.wikipedia.org/wiki/' + quote(word))
     soup = BeautifulSoup(r.text, "html.parser")
-    return "".join(list(filter(lambda x: x != "", map(lambda x: x.text, soup.find_all("p")))))
+    text = "".join(list(filter(lambda x: x != "", map(lambda x: x.text, soup.find_all("p")))))
+    return text
 
 
 def wakati_from_wikipedia(text):
@@ -87,10 +100,16 @@ def markov(wordlist):
     for i in range(5):
         count = 0
         sentence = ""
+        if list(markov_dict.keys()) == []:
+            break
         w1, w2 = random.choice(list(markov_dict.keys()))
         while count < 25:
             try:
                 tmp = random.choice(markov_dict[(w1, w2)])
+                if sentence == "" and word_and_kind_parse_for_wikipedia(
+                        tagger.parse(text_normalization(tmp))) is None:
+                    w1, w2 = random.choice(list(markov_dict.keys()))
+                    continue
                 sentence += tmp
                 if tmp == "。":
                     break
@@ -104,12 +123,13 @@ def markov(wordlist):
 
 def question_wikipedia(text):
     bokes = []
-    word = random.choice(list(word_from_title(text)))
+    word = random.choice(list(word_from_title_for_wikipedia(text)))
     sequenses = []
     similar_words = wikipedia_link(word)
     for i in range(5):
         text_from_wikipedia = wikipedia_text(random.choice(similar_words))
-        print(markov(wakati_from_wikipedia(text_from_wikipedia)))
+        for w in markov(wakati_from_wikipedia(text_from_wikipedia)):
+            print(w)
     return sequenses
 
 
